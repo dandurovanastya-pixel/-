@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Какой ты сегодня Егор?</title>
+  <style>
+    :root {
+      --sky-1: #dff5ff;
+      --sky-2: #9edcff;
+      --sky-3: #5db8ee;
+      --blue: #1779bd;
+      --blue-dark: #103d63;
+      --white: #ffffff;
+      --muted: #58718a;
+      --shadow: 0 18px 50px rgba(23, 86, 125, 0.18);
+      --radius: 26px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { min-height: 100%; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--blue-dark);
+      background:
+        radial-gradient(circle at 15% 15%, rgba(255,255,255,.85), transparent 26%),
+        linear-gradient(145deg, var(--sky-1) 0%, var(--sky-2) 52%, var(--sky-3) 100%);
+      overflow-x: hidden;
+    }
+
+    /* Фоновый слой шариков */
+    #balloons {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .balloon {
+      position: absolute;
+      bottom: -110px;
+      width: 54px;
+      height: 68px;
+      border-radius: 50% 50% 46% 46%;
+      background: linear-gradient(145deg, #ff625d 5%, #e53935 70%, #c62828 100%);
+      opacity: .45;
+      filter: drop-shadow(0 7px 10px rgba(139, 27, 27, .12));
+      animation: floatUp linear infinite;
+    }
+
+    .balloon::before {
+      content: "";
+      position: absolute;
+      left: 12px;
+      top: 10px;
+      width: 10px;
+      height: 18px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.5);
+      transform: rotate(25deg);
+    }
+
+    .balloon::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 66px;
+      width: 1px;
+      height: 72px;
+      background: rgba(132, 27, 27, .48);
+      transform: translateX(-50%);
+    }
+
+    .balloon-label {
+      position: absolute;
+      inset: 24px 3px auto;
+      text-align: center;
+      color: #fff;
+      font-size: 7px;
+      line-height: 1;
+      font-weight: 900;
+      letter-spacing: .15px;
+      text-shadow: 0 1px 2px rgba(100,0,0,.28);
+      transform: rotate(-3deg);
+    }
+
+    @keyframes floatUp {
+      0% { transform: translate3d(0, 0, 0) rotate(-4deg); }
+      25% { transform: translate3d(12px, -25vh, 0) rotate(4deg); }
+      50% { transform: translate3d(-10px, -50vh, 0) rotate(-3deg); }
+      75% { transform: translate3d(14px, -75vh, 0) rotate(4deg); }
+      100% { transform: translate3d(-4px, -125vh, 0) rotate(-4deg); }
+    }
+
+    .app {
+      position: relative;
+      z-index: 1;
+      width: min(680px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 28px 0 44px;
+    }
+
+    .screen { display: none; }
+    .screen.active { display: block; animation: screenIn .42s ease both; }
+
+    @keyframes screenIn {
+      from { opacity: 0; transform: translateY(14px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .glass {
+      background: rgba(255,255,255,.88);
+      border: 1px solid rgba(255,255,255,.78);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(8px);
+    }
+
+    .hero {
+      text-align: center;
+      padding: 16px 10px 22px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.72);
+      color: var(--blue);
+      font-weight: 900;
+      font-size: 13px;
+      letter-spacing: .4px;
+      box-shadow: 0 5px 16px rgba(23, 86, 125, .08);
+    }
+
+    h1 {
+      margin: 15px 0 9px;
+      font-size: clamp(34px, 8vw, 52px);
+      line-height: 1.02;
+      letter-spacing: -.8px;
+    }
+
+    .subtitle {
+      max-width: 570px;
+      margin: 0 auto;
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 16px;
+    }
+
+    .start-card {
+      padding: 28px 24px;
+      text-align: center;
+    }
+
+    .start-icon {
+      width: 94px;
+      height: 94px;
+      margin: 0 auto 18px;
+      display: grid;
+      place-items: center;
+      border-radius: 30px;
+      background: linear-gradient(145deg, #ffffff, #c9efff);
+      font-size: 52px;
+      box-shadow: inset 0 0 0 1px rgba(23,121,189,.08);
+    }
+
+    .primary {
+      width: 100%;
+      border: 0;
+      border-radius: 17px;
+      padding: 16px 20px;
+      color: #fff;
+      background: linear-gradient(135deg, #1685cf, #42afea);
+      font: inherit;
+      font-weight: 900;
+      font-size: 17px;
+      cursor: pointer;
+      box-shadow: 0 10px 24px rgba(23,121,189,.24);
+      transition: transform .18s ease, box-shadow .18s ease;
+    }
+
+    .primary:hover { transform: translateY(-2px); box-shadow: 0 14px 28px rgba(23,121,189,.27); }
+    .primary:active { transform: translateY(0); }
+
+    .hint {
+      margin-top: 13px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 3px 2px 14px;
+    }
+
+    .counter {
+      min-width: 116px;
+      font-size: 13px;
+      font-weight: 900;
+      white-space: nowrap;
+      color: #214f70;
+    }
+
+    .progress {
+      flex: 1;
+      height: 10px;
+      border-radius: 99px;
+      background: rgba(255,255,255,.62);
+      overflow: hidden;
+      box-shadow: inset 0 1px 2px rgba(23,86,125,.08);
+    }
+
+    .progress span {
+      display: block;
+      height: 100%;
+      width: 0;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #1685cf, #6acbfa);
+      transition: width .35s ease;
+    }
+
+    .question-card {
+      padding: 26px 22px 22px;
+      transition: opacity .18s ease, transform .18s ease;
+    }
+
+    .question-card.leaving {
+      opacity: 0;
+      transform: translateX(-12px);
+    }
+
+    .question-number {
+      color: var(--blue);
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: .5px;
+      margin-bottom: 9px;
+    }
+
+    .question {
+      margin: 0 0 20px;
+      font-size: clamp(22px, 5vw, 29px);
+      line-height: 1.22;
+      letter-spacing: -.2px;
+    }
+
+    .answers {
+      display: grid;
+      gap: 11px;
+    }
+
+    .answer {
+      width: 100%;
+      border: 2px solid rgba(23,121,189,.12);
+      border-radius: 17px;
+      background: rgba(255,255,255,.96);
+      color: var(--blue-dark);
+      padding: 16px 15px;
+      text-align: left;
+      font: inherit;
+      font-size: 15.5px;
+      font-weight: 650;
+      line-height: 1.4;
+      cursor: pointer;
+      box-shadow: 0 5px 14px rgba(23,86,125,.06);
+      transition: transform .16s ease, border-color .16s ease, background .16s ease;
+    }
+
+    .answer:hover {
+      transform: translateY(-2px);
+      border-color: rgba(23,121,189,.42);
+      background: #f4fbff;
+    }
+
+    .answer:active { transform: translateY(0); }
+
+    .answer:disabled { cursor: default; opacity: .7; }
+
+    .result-card {
+      padding: 26px 22px 28px;
+      text-align: center;
+    }
+
+    .result-image-wrap {
+      width: min(100%, 390px);
+      aspect-ratio: 1 / 1;
+      margin: 0 auto 20px;
+      border-radius: 25px;
+      overflow: hidden;
+      background: linear-gradient(145deg, #e8f8ff, #fff);
+      box-shadow: 0 13px 32px rgba(23,86,125,.15);
+    }
+
+    .result-image {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .result-placeholder {
+      width: 100%;
+      height: 100%;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      color: var(--muted);
+      font-weight: 800;
+      line-height: 1.45;
+    }
+
+    .result-name {
+      margin: 5px 0 10px;
+      font-size: clamp(28px, 7vw, 39px);
+      line-height: 1.08;
+    }
+
+    .multi {
+      display: inline-block;
+      margin-bottom: 12px;
+      padding: 8px 13px;
+      border-radius: 999px;
+      background: #e4f6ff;
+      color: var(--blue);
+      font-weight: 900;
+      font-size: 14px;
+    }
+
+    .description {
+      max-width: 570px;
+      margin: 0 auto 23px;
+      color: #465f73;
+      font-size: 16px;
+      line-height: 1.6;
+      white-space: pre-line;
+    }
+
+    .tie-list {
+      margin: 0 auto 20px;
+      max-width: 560px;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 7px;
+    }
+
+    .tie-list li {
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: #f3fbff;
+      color: #275773;
+      font-weight: 750;
+    }
+
+    @media (max-width: 520px) {
+      .app { width: min(100% - 18px, 680px); padding-top: 14px; }
+      .glass { border-radius: 21px; }
+      .start-card, .question-card, .result-card { padding-left: 15px; padding-right: 15px; }
+      .counter { min-width: 106px; font-size: 12px; }
+      .question { font-size: 21px; }
+      .answer { font-size: 15px; padding: 14px 12px; }
+      .balloon { transform: scale(.78); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <div id="balloons" aria-hidden="true"></div>
+
+  <main class="app">
+    <!-- Стартовый экран -->
+    <section id="startScreen" class="screen active">
+      <div class="hero">
+        <span class="badge">🎈 ДЕНЬ РОЖДЕНИЯ • МИНИ-КВИЗ</span>
+        <h1>Какой ты сегодня Егор?</h1>
+        <p class="subtitle">14 вопросов, четыре варианта ответа и один очень точный результат. Выбирай первое, что приходит в голову.</p>
+      </div>
+
+      <div class="glass start-card">
+        <div class="start-icon">🎂</div>
+        <button class="primary" id="startBtn">Начать</button>
+        <div class="hint">14 вопросов • один ответ на каждый вопрос</div>
+      </div>
+    </section>
+
+    <!-- Экран вопросов -->
+    <section id="quizScreen" class="screen">
+      <div class="topbar">
+        <div class="counter" id="counter">Вопрос 1 из 14</div>
+        <div class="progress" aria-label="Прогресс">
+          <span id="progressBar"></span>
+        </div>
+      </div>
+
+      <div class="glass question-card" id="questionCard">
+        <div class="question-number" id="questionNumber">ВОПРОС 1</div>
+        <h2 class="question" id="questionText"></h2>
+        <div class="answers" id="answers"></div>
+      </div>
+    </section>
+
+    <!-- Экран результата -->
+    <section id="resultScreen" class="screen">
+      <div class="hero">
+        <span class="badge">🎉 РЕЗУЛЬТАТ</span>
+        <h1 id="resultTitle">Вот какой ты сегодня Егор</h1>
+      </div>
+
+      <div class="glass result-card">
+        <div class="result-image-wrap" id="resultImageWrap"></div>
+        <div id="multiBadge"></div>
+        <h2 class="result-name" id="resultName"></h2>
+        <ul class="tie-list" id="tieList"></ul>
+        <p class="description" id="resultDescription"></p>
+        <button class="primary" id="againBtn">Пройти заново</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // Картинки результатов. Положите файлы в папку images рядом с index.html.
+    const resultImages = {
+      1: 'images/Сирена.jpg',
+      2: 'images/Макс Фрай.jpg',
+      3: 'images/Ленин.jpg',
+      4: 'images/Петрович.jpg',
+      5: 'images/Егорушка.jpg',
+      6: 'images/Охуевший.jpg',
+      7: 'images/Маквин.jpg',
+      8: 'images/Бэкрумс.jpg'
+    };
+
+    // Типы Егора и тексты для результата.
+    const types = {
+      1: {
+        name: 'Егор лабораторная сирена',
+        description: 'Скинет фотку чужого косяка в общий чат с саркастичным комментарием. «А тебя ничего не смущает?» Без него бы это место уже развалилось. Его все ненавидят (втайне обожают).'
+      },
+      2: {
+        name: 'Егор сэр Макс',
+        description: 'Разноцветные глаза, русо-рыжие волосы. Нравится всем на свете, и кому не нравится — тоже нравится. Очаровательный чёрт, умеет всё на свете. Любит комфорт и хорошо покушать.'
+      },
+      3: {
+        name: 'Егор отец, сын Ленина (но это не точно)',
+        description: 'Родился сыном жены Ленина, серьёзный, стал рано отцом дочери. Нудный, душный, пафосный.'
+      },
+      4: {
+        name: 'Егор, который Петрович',
+        description: 'Студент, шарит за биологию, химию и информатику. Живёт в общаге, замораживает еду, убивает тараканов. Любит чай, мало спит.'
+      },
+      5: {
+        name: 'Егорушка Петрович',
+        description: 'Весельчак, гуляет по барам, любит пить и сидеть на коленках. Нейтральная сторона. Любит KFC, парк и UNO.'
+      },
+      6: {
+        name: 'Охеревший Егор',
+        description: 'Громко кричит, любит микрофоны и орать. При несогласии лижет людей, чтобы помириться. Всегда самый правый и вообще хороший.'
+      },
+      7: {
+        name: 'Егор молния маквспышка',
+        description: 'Серьёзный фотограф. Ловит идеальный кадр, живёт вспышкой и резкостью. «Ка-чоу!»'
+      },
+      8: {
+        name: 'Егор Бэкрумс (крейзи Егор)',
+        description: 'Странный, непредсказуемый, любит заброшки и бэкрумсы. Внезапно исчезает и появляется с безумной идеей.'
+      }
+    };
+
+    // Каждый вариант хранит текст и номер типа, к которому он ведёт.
+    const questions = [
+      {
+        text: 'Утро. Ты открываешь глаза. Какая первая мысль приходит в голову?',
+        answers: [
+          ['«Новый день — новый повод не идти работать с идиотами-кхм-коллегами».', 1],
+          ['«Хотелось бы поспать ещё, но опять меня ждёт любимая работа, и я почему-то без меня всё непременно должно развалиться».', 2],
+          ['«Я проснулся. Долг зовёт. Отец учил меня: "Егор, вставай, даже если не хочется". Я встаю. Я всегда встаю!»', 3],
+          ['«Where is my tea? А, вот он..»', 4]
+        ]
+      },
+      {
+        text: 'Если бы твоё сегодняшнее настроение было погодой, то какой?',
+        answers: [
+          ['«Облачно, но с прояснениями. Как моё настроение: то UNO, то бар. Но без конфликтов.»', 5],
+          ['«ПОГОДА — ЭТО Я!!! Я — УРАГАН ПО ИМЕНИ ЕГОР!!!»', 6],
+          ['«К-чау! Солнечное, как вспышка! Резкое, яркое — и всё в фокусе!»', 7],
+          ['_̴̳̿̈̈ͯͪm̴̶̨ͥͫͯͥͮy͔̞̮̪̗̫̾ͬ̑̅5̅<̵̩̤̤̐͂̉͑ͅn͊ͩ͆͗ͅą̷̠̺̥̼̑́ͥ́ͥm̵̉e̶̵̅̔_̶̨͇̟̻̳̮ͣ̒̽̾į̨ͧs͖̜̮̣̲͖ͬͭ̊̿̀͋_̶̧͙͛͋ͥͭ̈̋̊̿g̵̵̻̪̤̐͂ͯ̒ͨg̵̵̻̪̤̐͂ͯ̒ͨh̶̶̰̩͙̖̒ͮ̆g̩̖͈̟͇͕͐̋ͥͨ̍̇h̴̴̪͓͙͛ͦ̇ͤ<̺̔ͧ_̧̲̻̙̥̱̫̤͛̿̀ͮͮȩ̦̥͕̣̫ͪ̇̉̆̅̄̿̏ͅg̩͚̲͓ͬ̊g̶̦͉̜͕̭̪̣͒͊͂ͬͧ̒̾ǵ̬̱̥̐ͥ̎̿g̩̞͎̜ͥ͐ͦ̇g̬̜̭̬͇̙̒̓ͭ̎̇̂ͧ̔g̴̓̉ͩ̊ͥỏ͉̮͔͖̥̰̃ͮ̊̎͑ͤͣr͎t̵̨͕̻͍̞̂̒͗̉y̴̠̦̤͖ȑ̻͎͉̝̲t̵̷͍̟̥͓̯͚͖́̎g̶̤ͫͥ͗́͋ͣ͂ğ̷̵͂̏̋̆̈y̶̷̲̣͈̥̜̲ͮ̔̇̔h̨̧̼͚͓̩6̶̵́̆̐ͨ̄̂̒ͩ7̷͕̥̠͇̬̠̐8̟̬̩͈͉̝̥ͨ̂͗̓̌͒̋̍2̵̧̹͍̤̱͚ͅ3̷̨̥', 8]
+        ]
+      },
+      {
+        text: 'Ты заходишь в комнату, где уже собралась компания. Что ты делаешь в первые пять секунд?',
+        answers: [
+          ['«Не скажу, что рад всех вас видеть в такой час, не очень дорогие коллеги, но кто-то объяснит, зачем мы тут собрались? Мне лень угадывать».', 2],
+          ['«Я зашёл. Я осмотрелся. Я сделал выводы. Продолжайте.»', 3],
+          ['«Привет. Я на минуту. У меня лаба по биохимии. И чай стынет.»', 4],
+          ['«Я никого не осуждаю. Я просто ищу, где тут можно сесть. Желательно на коленки.»', 5]
+        ]
+      },
+      {
+        text: 'Как ты понимаешь, что день точно удался?',
+        answers: [
+          ['«МИКРОФОН БЫЛ!!! Я ОРАЛ!!! ДЕНЬ УДАЛСЯ!!!»', 6],
+          ['«К-чау! День удался, если кадр получился с первого дубля! Я — скорость, я — свет, я — победа!»', 7],
+          ['2̴̗̣̼͔̥̯͔ͩ3̵̟̺͂̔͒ͣ͛<̵̯̼̫͍̝̿ͧͯ̄͒͋̊6̴̧̟̯̎́̄͆̌͊̏̋7̴̶̻̲͚̞͕͍͍j͍̞͉̠ͯd̦͕͔̞̙̲́ͣ͐ͣ͋̓̓ͅj̝̝̞̋̒ͯͮ̃̐̒͒r̨̧̜̆ͭ̈̔̍̍ͤh̨̞̃_̩̍͒̍̅͗ͤ͊͆6̷͛̉7̨̨̘͍̠̝͍̹̱̒͊̒̉̎j͓͎̞ͫ̃ẽ̶͙̙͉̟k̖̣̖̰̹͔ͪͪ͋̎̆r̘̠̠̳r̹̖̱̮̿ͬͬ_̶̧͇̰͚͍͍ͯͥ̏ͬ̆ͮ͐ͅ6̷̨͕ͫͭ̑̋͆̂́͛7̸̣̹̉͋ͦ͒̐̾j̵͔̳̗͎͚̞̟ͣͮ̌̔ͮ̏ͨr̴̴͓̮͉͙ͨ̐ͤͬ̀ͮ͛͌ḵ̸͕͙̱̄̔̆ͭ͗r̗ͅl̷̹̟̽̐͛̋̒̌', 8],
+          ['«Все наконец-то сделали свою работу как надо, и мне пришлось меньше трёх раз тыкать этих инфузорий в косяки».', 1]
+        ]
+      },
+      {
+        text: 'Тебе поручили дело, которое никто не хочет брать. Что происходит дальше?',
+        answers: [
+          ['«Я возьму. Но потом расскажу матери, как это было. Она должна знать.»', 3],
+          ['«Я возьму. Но потом буду жаловаться...»', 4],
+          ['«Окей, но с условием: после этого — бар, UNO и коленки».', 5],
+          ['«ПОШЛИ НАХЕР, УЕБКИ».', 6]
+        ]
+      },
+      {
+        text: 'Опиши свой идеальный отдых после тяжёлой недели.',
+        answers: [
+          ['«К-чау! Идеальный отдых? Взять камеру, найти хороший свет и снимать, пока никто не трогает настройки!»', 7],
+          ['i̶̧͇̫̽ͦ̈̆̏͗<̶̳͎͓̹̼̅͂ͪ_̴̜͎̂̇ͬ̆ͫ̂7̶͒̀͛̾̈͂f̧̧̐͐ͬ̎̂͑g͕̲̝͓͋̎͆ĩ̶̘̤̯̠̭̌̄ͫͧ̒g̨̨͙̰̐̎̅̾ỉ͉͙͍̣̗̩͑̾͐̂>̷̵̫̙̗͔͙́̑̂͒̈ͥ_̸̬̖̯͚̫̤ͥ̃̓ͣ̑̈̀h̵̨͚̻̗̆͗ͣ͊͆á̸ͦͣ͑ͣ5̸̶̮̩̼̪̞̒ͣ̅͆͋̽͒ͮͅẗ̃͂ͤͥͥ͋é̸̬ͤ̾͌̓̉̄_̳͚ͬͧ̔ͫ̏ͥ/̵̷̪̝̦̼̦͔̆̇ͮͅ<̳͙̥ͮ́ͪ͗̀̃̾͌ͅẗ̸̨͈͍̪ͥ͒͋h̴̴͉̤̟̪͔̩̥͛ͬͨe̶̻̝̙̬̲̘̣̖ͩ̑m̴̸͖͎̹͎͇͈̭͚ͫ̑͐ͫ͊̊̾_̩̮͂̄ͪ͛g̷̴̦͇͎̟̃ͥ̈̃̉ͧ͋o̴̶͎̞̦͖̲͎ͫ͂̄́ͅẇ̴̶͔̭̦͂ͣͮͮ̍͆́ͅi̷̟̇͛ͯ͐h̨̓͗̿ͬx̼̲̝̘͉̿̉ͣ2̺̺̬̩̩ͫ3̥̮̖̓a̵̫͆ͧͯ̂̓ͮl̳̼̮̑ͬͧ̃̀ļ̵ͪ/̝̫̜̫͕̑ͥͯ̎̽̽̈<͎͙̥͖̠͎ͭ̎̎/̣͙͎̟͔̘ͬͫ̓̓̈̒<̩̝̩̄̽͑ͬ', 8],
+          ['«Заниматься домашними делами, но следить за рабочим общим чатом. Я всегда наготове вступить в срачку».', 1],
+          ['«От души повеселиться за общим занятием с приятелем и поесть в вкусном заведении, а ещё лучше поспать».', 2]
+        ]
+      },
+      {
+        text: 'Ты неожиданно оказался в центре конфликта. Как ты себя ведёшь?',
+        answers: [
+          ['«Конфликт? Нет, спасибо. У меня замороженная еда размораживается».', 4],
+          ['«Я не вступаю. Я нейтральная сторона. Я просто сижу на коленках и ем».', 5],
+          ['«ПОШЛИ ВЫ НАХ*Й!! — орёт в микрофон».', 6],
+          ['«К-чау! У них всех нет шансов. Я таких лузеров ем на завтрак!»', 7]
+        ]
+      },
+      {
+        text: 'Какая фраза лучше всего описывает твоё состояние прямо сейчас?',
+        answers: [
+          ['h̜̘͎̱̬ͤͧ͐̀̿̓̅ę̸̆͌ͥͭͩͦ̇ͮḽ̙͈̠ͦ̂p̸̹̺̻͍̝̄̂̋̑̿4̸̵̞̞̯̦̦̙͍͔̀̂ͥͨͧ͗6̵̨̠̫̻͍͚̽f͎̹͔̖̤̪ȅ̵̴̞͉͈̱̟̭̼̔̎̒g̷̸̼͚̼̠̟͎ͧ͒̓̉̊̍_̷̳̼̹͛̑͑̐ͧ̔̽ḿ̞̟̦͔̏̎̑̎ȩ̵͔̯t̮̫̫̖̏̾ͅh̨͇̣ͬḑ͚̰̙̫̼͛ͨv̴̨̬̇ͩj͍ͭ͌͆̇ͬ͒̿̏1̶̷͈̬͔̩͉̣̝7̴̵͕̝̒̍̃ͮ̅ͥ3̸̴̾ͩ̂̅̆̀̂͒ḭ̴̶ͫ͋̋̄ͨ̑̽', 8],
+          ['«Ну они все идиоты, я что могу сделать. Только помочь им это понять как можно быстрее».', 1],
+          ['«...Мне просто необходимо посидеть дома. Хотя бы дня три — о большем и мечтать не смею. Выспаться, немного поскучать...»', 2],
+          ['«Я тот, кто встаёт, даже когда не хочется».', 3]
+        ]
+      },
+      {
+        text: 'Если бы про твой сегодняшний день сняли фильм, как бы он назывался?',
+        answers: [
+          ['«Парк, бар и коленки: история одного Егора»', 5],
+          ['«Громче всех: как я всех перелизал»', 6],
+          ['«К-чау! Фильм? Да зачем он мне, когда я сам снимаю! Молния, готов? Всегда готов! И пока вы придумываете название, я уже сделал кадр, который скажет всё сам!»', 7],
+          ['p̘̂ͤͥf̷̼̥̼͛ͨo̴͚̙̦̍͗̐h̦̙ͩ̐ó̫ŕ̭̝͗k̵͕̺̻͂̿̓4̰̞̃̔_̴̖̼̫͛g̶͖͂̇o̴͕͈ͬ̋e̦͂̉', 8]
+        ]
+      },
+      {
+        text: 'Как ты относишься к вниманию окружающих?',
+        answers: [
+          ['«Легко и уверенно себя чувствую, пошли они все, пусть начнут работать нормально».', 1],
+          ['«Я легко его получаю, очаровывая всех, как будто само собой и без моего участия».', 2],
+          ['«Внимание — это долг. Я его несу. Как отец. Как сын».', 3],
+          ['«Я отношусь к вниманию нейтрально. Как к соседу, которого выжил».', 4]
+        ]
+      },
+      {
+        text: 'Что ты делаешь, когда хочешь понравиться людям?',
+        answers: [
+          ['«ГОВОРЮ, ЧТО ОНИ ПРАВЫ!!! ХОТЯ ПРАВ — Я!!! НО ИМ ПРИЯТНО!!!»', 6],
+          ['«К-чау! Хочешь понравиться? Тут у них нет шансов: пара кадров — и они уже мои фанаты!»', 7],
+          ['r̪̤ͮu̧̿ṅ̷͈a̴̯̔ͫ͆w̐ͣͩa̴̾y͙ͣ͐', 8],
+          ['«Я просто весельчак. И никого не осуждаю. И ем KFC»', 5]
+        ]
+      },
+      {
+        text: 'Какая мелочь может испортить тебе день?',
+        answers: [
+          ['«Расстроенные планы. Бесполезно! Я уже убедился, что планы приносят только разочарования».', 2],
+          ['«Если кто-то неуважительно отозвался об отце. Это неприемлемо».', 3],
+          ['«Таракан. Которого я не добил. Он портит всё».', 4],
+          ['«Ничего. Это я его всем испорчу».', 1]
+        ]
+      },
+      {
+        text: 'Ты на вечеринке. Где тебя искать?',
+        answers: [
+          ['«К-чау! На вечеринке меня ищи там, где лучший свет и уже сверкнула вспышка. Ведь гром всегда идёт после молнии!»', 7],
+          ['ţ͌d͊̑ͦo̅s̷̺̗ṱ̙͔̈o̲̬͗̆̌h͓͙w͐ͥͩḽ̶̯͓̿̎m̞̺̯ͣ̐͋j̲̎x̆̄ͦó̵̹ͫ͛d̯̫͆̉ͅy̷͇̪̺̆̊o̭̟͉s̭̻̒͊ẙ͉͓̊͐s̱̑͌y̆ŏ̠̪̥ͥ̏̏y̵̬͈w̳͚͙̌͑̍o̶̮͒̏̌5̵ͭ͊i̼̊͋s͚͋̐s̶̺̏̃ͥy̷ͭo̵o̷̐̂ͪẃͨ̃y͇̲̹̅', 8],
+          ['«На коленках с UNO»', 5],
+          ['«У МИКРОФОНА!!! Я ОРУ!!!»', 6]
+        ]
+      },
+      {
+        text: 'Если бы у тебя был один супергеройский навык на сегодня, какой бы ты выбрал?',
+        answers: [
+          ['«Умение вставать с достоинством. Даже когда не хочется. Это суперсила».', 3],
+          ['«Не спать вообще. И при этом шарить в биохимии. Это суперсила».', 4],
+          ['«Всего один рабочий день. Чтобы все делали свою работу как надо».', 1],
+          ['«Моя внутренняя свинья хочет счастья и пожрать, и чтобы ничего за это не было».', 2]
+        ]
+      }
+    ];
+
+    let currentQuestion = 0;
+    let scores = {};
+
+    const $ = (id) => document.getElementById(id);
+
+    // Переключение экранов.
+    function showScreen(id) {
+      document.querySelectorAll('.screen').forEach(screen => {
+        screen.classList.toggle('active', screen.id === id);
+      });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Создание фоновых шариков только по бокам экрана.
+    function createBalloons() {
+      const container = $('balloons');
+      const count = 18;
+
+      for (let i = 0; i < count; i++) {
+        const balloon = document.createElement('div');
+        balloon.className = 'balloon';
+
+        // 0 = левая треть, 1 = правая треть.
+        const side = i % 2 === 0 ? 'left' : 'right';
+        const edge = 4 + Math.random() * 24;
+        balloon.style[side] = `${edge}%`;
+        balloon.style.width = `${40 + Math.random() * 22}px`;
+        balloon.style.height = `${53 + Math.random() * 27}px`;
+        balloon.style.opacity = `${0.35 + Math.random() * 0.25}`;
+        balloon.style.animationDuration = `${8 + Math.random() * 12}s`;
+        balloon.style.animationDelay = `${-Math.random() * 18}s`;
+
+        const label = document.createElement('span');
+        label.className = 'balloon-label';
+        label.textContent = 'Happy Birthday';
+        balloon.appendChild(label);
+        container.appendChild(balloon);
+      }
+    }
+
+    // Начать квиз и сбросить счёт.
+    function startQuiz() {
+      currentQuestion = 0;
+      scores = {};
+      for (let i = 1; i <= 8; i++) scores[i] = 0;
+      showScreen('quizScreen');
+      renderQuestion();
+    }
+
+    // Показать текущий вопрос.
+    function renderQuestion() {
+      const question = questions[currentQuestion];
+      const card = $('questionCard');
+
+      card.classList.remove('leaving');
+      $('counter').textContent = `Вопрос ${currentQuestion + 1} из ${questions.length}`;
+      $('questionNumber').textContent = `ВОПРОС ${currentQuestion + 1}`;
+      $('questionText').textContent = question.text;
+      $('progressBar').style.width = `${(currentQuestion / questions.length) * 100}%`;
+
+      const answers = $('answers');
+      answers.innerHTML = '';
+
+      question.answers.forEach(([text, type]) => {
+        const button = document.createElement('button');
+        button.className = 'answer';
+        button.type = 'button';
+        button.textContent = text;
+        button.addEventListener('click', () => chooseAnswer(type));
+        answers.appendChild(button);
+      });
+    }
+
+    // Засчитать ответ и автоматически перейти дальше.
+    function chooseAnswer(type) {
+      scores[type]++;
+      document.querySelectorAll('.answer').forEach(button => button.disabled = true);
+
+      if (currentQuestion < questions.length - 1) {
+        $('questionCard').classList.add('leaving');
+        setTimeout(() => {
+          currentQuestion++;
+          renderQuestion();
+        }, 180);
+      } else {
+        $('progressBar').style.width = '100%';
+        setTimeout(showResult, 180);
+      }
+    }
+
+    // Определить все типы с максимальным счётом.
+    function getWinningTypes() {
+      const maxScore = Math.max(...Object.values(scores));
+      return Object.keys(scores)
+        .map(Number)
+        .filter(type => scores[type] === maxScore);
+    }
+
+    // Показать результат, включая случай ничьей.
+    function showResult() {
+      const winningTypes = getWinningTypes();
+      const winningType = winningTypes[0];
+      const winner = types[winningType];
+
+      $('resultName').textContent = winner.name;
+      $('resultDescription').textContent = winner.description;
+
+      const multiBadge = $('multiBadge');
+      const tieList = $('tieList');
+      tieList.innerHTML = '';
+
+      if (winningTypes.length > 1) {
+        multiBadge.innerHTML = '<span class="multi">Ты мульти-Егор!</span>';
+        winningTypes.forEach(type => {
+          const li = document.createElement('li');
+          li.textContent = `${types[type].name} — ${scores[type]} ${pluralScore(scores[type])}`;
+          tieList.appendChild(li);
+        });
+      } else {
+        multiBadge.innerHTML = '';
+      }
+
+      // Картинка берётся у первого типа при ничьей.
+      const imageWrap = $('resultImageWrap');
+      imageWrap.innerHTML = '';
+      const img = document.createElement('img');
+      img.src = resultImages[winningType];
+      img.alt = 'Егор';
+      img.className = 'result-image';
+      img.addEventListener('error', () => {
+        imageWrap.innerHTML = '<div class="result-placeholder">Картинка результата не найдена.<br>Проверьте папку <b>images</b> и имя файла.</div>';
+      });
+      imageWrap.appendChild(img);
+
+      showScreen('resultScreen');
+    }
+
+    function pluralScore(number) {
+      if (number % 10 === 1 && number % 100 !== 11) return 'балл';
+      if ([2,3,4].includes(number % 10) && ![12,13,14].includes(number % 100)) return 'балла';
+      return 'баллов';
+    }
+
+    $('startBtn').addEventListener('click', startQuiz);
+    $('againBtn').addEventListener('click', startQuiz);
+
+    createBalloons();
+  </script>
+</body>
+</html>
